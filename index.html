@@ -4,15 +4,15 @@
 <head>
     <meta charset="utf-8">
 
-    <title>reveal.js - The HTML Presentation Framework</title>
+    <title>Build Automation</title>
 
-    <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
-    <meta name="author" content="Hakim El Hattab">
+    <meta name="description" content="Build Automation at SOLID Interactive">
+    <meta name="author" content="Peter Ajtai">
 
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-    <link rel="stylesheet" href="css/reveal.min.css">
+    <link rel="stylesheet" href="css/reveal.css">
     <link rel="stylesheet" href="css/theme/default.css" id="theme">
 
     <!-- For syntax highlighting -->
@@ -35,6 +35,13 @@
     <!-- Any section element inside of this container is displayed as a slide -->
     <div class="slides">
 
+        <section>
+            <h1>Build Automation</h1>
+            <br><br>
+            <h3>by Peter Ajtai</h3>
+            <img src="img/logo.gif" alt="SOLID logo" />
+
+        </section>
 
         <section>
             <h3>Fat fingers</h3>
@@ -44,6 +51,7 @@
 
         <section>
             <section>
+                <h3>Solution:</h3>
                 <h1>Build Automation</h1>
             </section>
             <section>
@@ -51,7 +59,7 @@
                 <ul>
                     <li class="fragment">Originally for compilers / linkers</li>
                     <li class="fragment">XML / Shell</li>
-                    <li class="fragment">Now there are more options</li>
+                    <li class="fragment">Now there are more options. Your imagination is the limit.</li>
                 </ul>
             </section>
             <section>
@@ -78,15 +86,51 @@
                         <li class="fragment">Grunt uses Node (server JS)</li>
                     </ul>
                 </li>
+                <li class="fragment">Writing your own tasks is simple</li>
+                <li class="fragment">Kicking off other - non Grunt - tasks is simple</li>
             </ul>
         </section>
+
 
         <section>
             <h2>Our build goals</h2>
             <ol>
                 <li class="fragment">Builds to push to stage and production</li>
-                <li class="fragment">No CI yet</li>
+                <li class="fragment">No CI (yet?)</li>
             </ol>
+        </section>
+
+        <section>
+            <h2>Anatomy of a Grunt process</h2>
+            <ul>
+                <li class="fragment">config object - in grunt.js</li>
+                <li class="fragment">package.json - your dependencies</li>
+                <li class="fragment">task registrations and definitions</li>
+                <li class="fragment">let's look at an example...</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>The Tasks</h2>
+<h3>Minimum necessary tasks for a stage push</h3>
+<pre><code contenteditable>grunt.registerTask('shell:cleanStage cp:temp setPHPConstant:stage' +
+                   'useref concat min cssmin shell:propelGen' +
+                   'clean cp:stage shell:buildStageToGitlab');
+</code></pre>
+            <br>
+<pre class="fragment"><code contenteditable>// set things up
+shell:cleanStage cp:temp
+// PHP environment changes - leverages PHP
+setPHPConstant:stage
+// min, concat, cache bust (for twig templates too)
+useref concat min cssmin
+// propel
+shell:propelGen
+// cleanup
+clean cp:stage
+// git going - this task is more involved
+shell:buildStageToGitlab
+</code></pre>
         </section>
 
         <section>
