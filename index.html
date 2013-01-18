@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 
 <head>
     <meta charset="utf-8">
@@ -131,7 +131,6 @@
             </ul>
         </section>
 
-        <section>
             <section>
                 <h3>The Tasks</h3>
 <pre class="fragment"><code contenteditable>grunt.registerTask('shell:cleanStage cp:temp setPHPConstant:stage' +
@@ -235,7 +234,10 @@ useref concat min cssmin</code></pre>
                 <ul>
                     <li class="fragment">Concept from <a href="https://raw.github.com/h5bp/node-build-script/master/tasks/usemin.js">H5BP</a>
                     and <a href="https://raw.github.com/h5bp/node-build-script/master/tasks/usemin.js">Yeoman</a></li>
-                    <li class="fragment"><a href="https://npmjs.org/package/grunt-useref">useref</a> simplifies and customizes the concept to our needs</li>
+                    <li class="fragment"><a href="https://npmjs.org/package/grunt-useref">useref</a> simplifies and customizes the concept to our needs (many pages with blocks, grunt templates, comments within blocks, options for cache bust, etc.)</li>
+                    <li class="fragment">Works for both js and css</li>
+                    <li class="fragment">As many blocks on a page as you want</li>
+                    <li class="fragment">As many pages with blocks you want</li>
                     <li class="fragment">Don't have to manually update a list of minification or concatenations!</li>
                     <li class="fragment">Can easilly run project for debugging withou min, concat, etc.</li>
                 </ul>
@@ -244,16 +246,232 @@ useref concat min cssmin</code></pre>
 
             <section>
                 <h2>Build blocks</h2>
+<pre class="fragment"><code contenteditable>&lt;!-- build:js /js/base.&lt;%= grunt.template.today(&#39;yymmddhhMM&#39;) %&gt;.min.js --&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/js/vendor/jquery.1.7.1.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/js/vendor/bootstrap.2.2.2.js&quot;&gt;&lt;/script&gt;
+&lt;!-- Underscore drop-in --&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/js/vendor/lodash.0.8.0.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/js/vendor/cryptojs-3-0-2/rollups/hmac-sha1.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/js/vendor/cryptojs-3-0-2/components/enc-base64-min.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;/js/vendor/modernizr-2.5.3.js&quot;&gt;&lt;/script&gt;
+&lt;!-- endbuild --&gt;</code></pre>
 
-                
+<pre class="fragment"><code contenteditable>&lt;!-- The above compacts to this --&gt;
+&lt;script src=&quot;/js/base.1301170537.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;!-- AND it creates the min concat file, and puts it in the appropriate spot --&gt;</code></pre>
+
             </section>
+
+            <section>
+<pre><code contenteditable>// propel
+shell:propelGen</code></pre>
+            <ul><li class="fragment">Just another task that you would always have to remember</li></ul>
+            </section>
+
+            <section>
+<pre><code contenteditable>// cleanup
+clean cp:stage</code></pre>
+                <ul>
+                    <li class="fragment">More things you'd have to remember</li>
+                    <li class="fragment"><a href="https://npmjs.org/package/grunt-clean">clean</a></li>
+                    <li class="fragment">Removes things like schemas, config files, etc.</li>
+                    <li class="fragment">
+<pre class="fragment"><code contenteditable>clean : {
+    buildProperties : project.dirs.temp + project.files.buildProperties,
+    runtimeConf : project.dirs.temp + project.files.runtimeConf,
+    schema : project.dirs.temp + project.files.schema
+},
+</code></pre>
+                    </li>
+                    <li class="fragment">If you refer to a multi task without a target, all targets are run.</li>
+                    <li class="fragment">e.g "clean" vs "clean:schema"</li>
+                    <li class="fragment">At this point everything is in targets/stage - this is .gitignored!</li>
+                </ul>
+            </section>
+
+            <section>
+<pre><code contenteditable>// git going - this task is more involved
+shell:buildStageToGitlab</code></pre>
+<pre class="fragment"><code contenteditable>buildStageToGitlab: {
+    command: 'git stash save "Build script saving current branch state" ' +
+    '&& git checkout stage ' +
+    '&& git pull --rebase ' +
+    '&& ls | grep -v ^targets$ | grep -v ^node_modules$ | grep -v ^cache$ | grep -v ^logs$ | grep -v ^temp$ | xargs rm -r ' +
+    '&& cp -R targets/stage/ . ' +
+    '&& echo $(($(<.build) + 1))>.build ' +
+    '&& git add -A ' +
+    '&& git commit -am "Stage build: "$(<.build)' +
+    '&& git push origin stage ' +
+    '&& git checkout - ' +
+    '&& git stash pop',
+    stdout : true,
+    stderr : true
+    }
+},</code></pre>
+            </section>
+
+            <section>
+                <h3>buildStageToGitlab</h3>
+<pre><code contenteditable>git stash save "Build script saving current branch state</code></pre>
+                <ul>
+                    <li class="fragment">Since this is for staging, you don't need everything committed</li>
+                    <li class="fragment">Production would be different</li>
+                    <li class="fragment">This needs to be cleaned up, since it shows error if everything IS commited (but works anyway)</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>buildStageToGitlab</h3>
+                <pre><code contenteditable>git checkout stage</code></pre>
+                <ul>
+                    <li class="fragment">We can switch branches</li>
+                    <li class="fragment">Grunt is global</li>
+                    <li class="fragment">Grunt config is already stored</li>
+                    <li class="fragment">And node_modules is in .gitignore</li>
+                    <li class="fragment">Untracked files are preserved on branch switches</li>
+                    <li class="fragment">So what happens to targets/stage ?</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>buildStageToGitlab</h3>
+                <pre><code contenteditable>git pull --rebase</code></pre>
+                <img src="img/pull.png" alt="pull --rebase image"/>
+                <ul>
+                    <li class="fragment">Make sure you have latest</li>
+                    <li class="fragment">Make sure you rewind head, and apply your changes during the ff (no meaningless merges)</li>
+                    <li class="fragment">--rebase should be in your ~/.gitconfig but we can't be sure</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>buildStageToGitlab</h3>
+                <pre><code contenteditable>git pull --rebase</code></pre>
+                <img src="img/pull.png" alt="pull --rebase image"/>
+                <ul>
+                    <li class="fragment">Two people are at commit "Original"</li>
+                    <li class="fragment">Person 1: Original - 1Change</li>
+                    <li class="fragment">Person 2: Original - 2Change</li>
+                    <li class="fragment">Person 1 pushes to remote</li>
+                    <li class="fragment">At this point person 2 has diverged</li>
+                    <li class="fragment">Solution rewind head to Original, add 1Change, now add 2Change and no need to merge</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>buildStageToGitlab</h3>
+                <pre><code contenteditable>ls |
+grep -v ^targets$ | grep -v ^node_modules$ | grep -v ^cache$ |
+grep -v ^logs$ | grep -v ^temp$ |
+xargs rm -r </code></pre>
+                <ul>
+                    <li class="fragment">Grunts flexibility allows you to preserve the headaches of shell tasks... yay?</li>
+                    <li class="fragment">We delete everything but certain chosen directories</li>
+                    <li class="fragment">grep -v "inverts" your grep - everything but</li>
+                    <li class="fragment">You can pipe arguments into xargs</li>
+                    <li class="fragment">We get the args from a filtered "ls" command</li>
+                    <li class="fragment">Basically delete the old stage build and start fresh</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>buildStageToGitlab</h3>
+                <pre><code contenteditable>cp -R targets/stage/ . </code></pre>
+                <ul>
+                    <li class="fragment">Copy new build to root of stage</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>buildStageToGitlab</h3>
+                <pre><code contenteditable>echo $(($(<.build) + 1))>.build</code></pre>
+                <ul>
+                    <li class="fragment">There is a file on stage that contains the build number</li>
+                    <li class="fragment">This is public and useful for bug reports / etc.</li>
+                    <li class="fragment">It is also a simple sanity check</li>
+                    <li class="fragment">If we know a version worked, can revert to it with git</li>
+                    <li class="fragment">The code pulls contents of .build into a variable</li>
+                    <li class="fragment">adds one</li>
+                    <li class="fragment">pushes updated number back to .build file</li>
+                </ul>
+            </section>
+
+        <section>
+            <h3>buildStageToGitlab</h3>
+            <pre><code contenteditable>git add -A</code></pre>
+            <ul>
+                <li class="fragment">add all new files (if any) to git stage</li>
+            </ul>
         </section>
 
+        <section>
+            <h3>buildStageToGitlab</h3>
+            <pre><code contenteditable>git commit -am "Stage build: "$(<.build)</code></pre>
+            <ul>
+                <li class="fragment">Commit to stage with a message indicating the build number</li>
+                <li class="fragment">We wanted pushes to stage to have incremental build numbers no matter how many people commit in what order</li>
+                <li class="fragment">The .build file along with the git pull guarantees this</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>buildStageToGitlab</h3>
+            <pre><code contenteditable>git push origin stage</code></pre>
+            <ul>
+                <li class="fragment">Push to centralized server</li>
+                <li class="fragment">Now all that is required from stage is a simpl
+<pre><code contenteditable>git pull</code></pre></li>
+                <li class="fragment">We can immediately tell if something is wrong on stage with git status
+<pre><code contenteditable>git status</code></pre></li>
+                <li class="fragment">For a quick fix we can
+<pre><code contenteditable>git reset --hard &lt;sha-ref&gt;</code></pre></li>
+                <li class="fragment">Post commit hook on server for CI</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>buildStageToGitlab</h3>
+            <pre><code contenteditable>git checkout -</code></pre>
+            <ul>
+                <li class="fragment">Almost done, but we don't want to leave the user hanging in stage</li>
+                <li class="fragment">For production we know we will only build from master, but what about stage?</li>
+                <li class="fragment">We don't know so we go back to the previous checked out branch
+<pre><code contenteditable>
+// checkout the nth previously checkout out branch
+git checkout @{-n}
+// shortcut for @{-1}
+git checkout -</code></pre></li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>buildStageToGitlab</h3>
+            <pre><code contenteditable>git stash pop</code></pre>
+            <ul>
+                <li class="fragment">Apply your local changes and discard that stash</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>The bright new future</h2>
+            <ul>
+                <li class="fragment">Automation to make sure we don't forget things</li>
+                <li class="fragment">Flesh out this build process
+                    <ul>
+                        <li class="fragment">Unit tests - we already wrote them</li>
+                        <li class="fragment">Linting JS, CSS, PHP - this is delicate</li>
+                        <li class="fragment">CI and emails to interested parties</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
 
         <section>
             <h1>THE END</h1>
             <br>
             <h2>by Peter Ajtai</h2>
+            <img src="img/logo.gif" alt="SOLID logo" />
             <h3>Thanks to: Hakim El Hattab / hakim.se for <a href="http://lab.hakim.se/reveal-js/">reveal.js</a></h3>
         </section>
 
