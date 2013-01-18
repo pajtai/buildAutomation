@@ -6,7 +6,7 @@
 
     <title>Build Automation</title>
 
-    <meta name="description" content="Build Automation at SOLID Interactive">
+    <meta name="description" content="How SOLID Interactive jumped into build automation">
     <meta name="author" content="Peter Ajtai">
 
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -80,7 +80,6 @@
             <h2>Grunt</h2>
             <ul>
                 <li class="fragment">Grunt is not only for Javascript</li>
-                <li class="fragment">Grunt has a vibrant community of plugin authors</li>
                 <li class="fragment">We all know Javascript
                     <ul>
                         <li class="fragment">Grunt uses Node (server JS)</li>
@@ -88,6 +87,13 @@
                 </li>
                 <li class="fragment">Writing your own tasks is simple</li>
                 <li class="fragment">Kicking off other - non Grunt - tasks is simple</li>
+                <li class="fragment">Grunt has a vibrant community of plugin authors
+                    <ul>
+                        <li class="fragment">SOLID has some plugins</li>
+                        <li class="fragment">This means they can be used in multiple projects, but updated centrally</li>
+                        <li class="fragment">NPM means have access to old versions</li>
+                    </ul>
+                </li>
             </ul>
         </section>
 
@@ -111,50 +117,138 @@
         </section>
 
         <section>
-            <h2>The Tasks</h2>
-<h3>Minimum necessary tasks for a stage push</h3>
-<pre><code contenteditable>grunt.registerTask('shell:cleanStage cp:temp setPHPConstant:stage' +
-                   'useref concat min cssmin shell:propelGen' +
-                   'clean cp:stage shell:buildStageToGitlab');
-</code></pre>
+            <h2>Proof of concept that we can incorporate automated builds</h2>
             <br>
-<pre class="fragment"><code contenteditable>// set things up
-shell:cleanStage cp:temp
-// PHP environment changes - leverages PHP
-setPHPConstant:stage
-// min, concat, cache bust (for twig templates too)
-useref concat min cssmin
-// propel
-shell:propelGen
-// cleanup
-clean cp:stage
-// git going - this task is more involved
-shell:buildStageToGitlab
-</code></pre>
+            <ul class="fragment">
+                <li>Minimum necessary tasks for a stage push</li>
+                <li class="fragment">If it works (and it does!), much more can be added
+                    <ul>
+                        <li class="fragment">Linting</li>
+                        <li class="fragment">Unit tests</li>
+                        <li class="fragment">...</li>
+                    </ul>
+                </li>
+            </ul>
         </section>
 
         <section>
-            <h2>Pretty Code</h2>
-					<pre><code contenteditable>
-                        function linkify( selector ) {
-                        if( supports3DTransforms ) {
+            <section>
+                <h3>The Tasks</h3>
+<pre class="fragment"><code contenteditable>grunt.registerTask('shell:cleanStage cp:temp setPHPConstant:stage' +
+    'useref concat min cssmin shell:propelGen' +
+    'clean cp:stage shell:buildStageToGitlab');
+</code></pre>
+<pre class="fragment"><code contenteditable>// set things up
+shell:cleanStage cp:temp</code></pre>
+<pre class="fragment"><code contenteditable>// PHP environment changes - leverages PHP
+setPHPConstant:stage</code></pre>
+<pre class="fragment"><code contenteditable>// min, concat, cache bust (for twig templates too)
+useref concat min cssmin</code></pre>
+<pre class="fragment"><code contenteditable>// propel
+shell:propelGen</code></pre>
+<pre class="fragment"><code contenteditable>// cleanup
+clean cp:stage</code></pre>
+<pre class="fragment"><code contenteditable>// git going - this task is more involved
+shell:buildStageToGitlab</code></pre>
+            </section>
 
-                        var nodes = document.querySelectorAll( selector );
+            <section>
+                <h2>Tangent: Build flags</h2>
+                <ul>
+                    <li>Grunt supports <a href="https://github.com/gruntjs/grunt/wiki/grunt.option">build flags</a> through:
+<pre class="fragment"><code contenteditable>var flagValue=grunt.option('flag');</code></pre>
+                    </li>
+                    <li class="fragment">Grunt also uses targets for multi tasks
+                        <ul>
+                            <li class="fragment">Targets are references to config values within task objects</li>
+                            <li class="fragment">
+<pre class="fragment"><code contenteditable>shell:clean</code></pre>
+<pre class="fragment"><code contenteditable>gruntConfig: {
+    shell: {
+        clean: { // This is shell:clean
+           ...
+        }
+    ...</code></pre>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </section>
 
-                        for( var i = 0, len = nodes.length; i &lt; len; i++ ) {
-                        var node = nodes[i];
+            <section>
+<pre><code contenteditable>// set things up
+shell:cleanStage cp:temp</code></pre>
+                <ul>
+                    <li class="fragment">Tasks can use node directly, but often simpler to use a Grunt task
+                        <ul>
+                            <li><a href="https://npmjs.org/package/grunt-shell">grunt-shell</a></li>
+                            <li><a href="https://npmjs.org/package/grunt-cp">grunt-cp</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </section>
 
-                        if( !node.className ) ) {
-                        node.className += ' roll';
-                        }
-                        };
-                        }
-                        }
-                    </code></pre>
-            <p>Courtesy of <a href="http://softwaremaniacs.org/soft/highlight/en/description/">highlight.js</a>.</p>
+            <section>
+<pre><code contenteditable>// PHP environment changes - leverages PHP
+setPHPConstant:stage</code></pre>
+<pre class="fragment"><code contenteditable>setPHPConstant : {
+    stage : {
+        constant : 'ENV',
+        value : 'staging',
+        file : project.dirs.temp + project.files.constants
+    }
+}</code></pre>
+<pre class="fragment"><code contenteditable>// Changes this
+define('ENV', 'local');</code></pre>
+<pre class="fragment"><code contenteditable>// To this, and PHP does the rest...
+define('ENV', 'staging');</code></pre>
+                <ul>
+                    <li class="fragment"><a href="https://npmjs.org/package/grunt-php-set-constant">php-set-constant</a> is a Grunt plugin on NPM
+                        <ul>
+                            <li class="fragment">Inter office collaboration. Thanks Eric!</li>
+                            <li class="fragment">International collaboration. Thanks Róbert!</li>
+                            <li class="fragment">Integrates with how you naturally do things in PHP to set environments</li>
+                        </ul>
+                    </li>
+                </ul>
+            </section>
+
+            <section>
+<pre><code contenteditable>// min, concat, cache bust (for twig templates too)
+useref concat min cssmin</code></pre>
+
+                <ul>
+                    <li class="fragment"><a href="https://npmjs.org/package/grunt-useref">useref</a>: also one of our Grunt plugins</li>
+                    <li class="fragment">A more complex task, make use of other tasks</li>
+                    <li class="fragment">useref could call concat, min, and cssmin directly, but users need flexibility as to order of calls. Order is left up to user.</li>
+                    <li class="fragment">What useref does
+                        <ul>
+                            <li class="fragment">Allows you to define what to minify and concatenate and how to cache bust all in one place</li>
+                            <li class="fragment">All these things are defined in build blocks...</li>
+                        </ul>
+                    </li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Build blocks</h2>
+                <ul>
+                    <li class="fragment">Concept from <a href="https://raw.github.com/h5bp/node-build-script/master/tasks/usemin.js">H5BP</a>
+                    and <a href="https://raw.github.com/h5bp/node-build-script/master/tasks/usemin.js">Yeoman</a></li>
+                    <li class="fragment"><a href="https://npmjs.org/package/grunt-useref">useref</a> simplifies and customizes the concept to our needs</li>
+                    <li class="fragment">Don't have to manually update a list of minification or concatenations!</li>
+                    <li class="fragment">Can easilly run project for debugging withou min, concat, etc.</li>
+                </ul>
+
+            </section>
+
+            <section>
+                <h2>Build blocks</h2>
+
+                
+            </section>
         </section>
 
-        </section>
 
         <section>
             <h1>THE END</h1>
