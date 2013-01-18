@@ -79,7 +79,7 @@
         <section>
             <h2>Grunt</h2>
             <ul>
-                <li class="fragment">Grunt is not only for Javascript</li>
+                <li class="fragment"><a href="http://gruntjs.com/">Grunt</a> is not only for Javascript</li>
                 <li class="fragment">We all know Javascript
                     <ul>
                         <li class="fragment">Grunt uses Node (server JS)</li>
@@ -218,7 +218,7 @@ useref concat min cssmin</code></pre>
 
                 <ul>
                     <li class="fragment"><a href="https://npmjs.org/package/grunt-useref">useref</a>: also one of our Grunt plugins</li>
-                    <li class="fragment">A more complex task, make use of other tasks</li>
+                    <li class="fragment">A more complex task; makes use of other tasks</li>
                     <li class="fragment">useref could call concat, min, and cssmin directly, but users need flexibility as to order of calls. Order is left up to user.</li>
                     <li class="fragment">What useref does
                         <ul>
@@ -239,7 +239,7 @@ useref concat min cssmin</code></pre>
                     <li class="fragment">As many blocks on a page as you want</li>
                     <li class="fragment">As many pages with blocks you want</li>
                     <li class="fragment">Don't have to manually update a list of minification or concatenations!</li>
-                    <li class="fragment">Can easilly run project for debugging withou min, concat, etc.</li>
+                    <li class="fragment">Can easilly run project for debugging without min, concat, etc.</li>
                 </ul>
 
             </section>
@@ -313,7 +313,7 @@ shell:buildStageToGitlab</code></pre>
 
             <section>
                 <h3>buildStageToGitlab</h3>
-<pre><code contenteditable>git stash save "Build script saving current branch state</code></pre>
+<pre><code contenteditable>git stash save "Build script saving current branch state"</code></pre>
                 <ul>
                     <li class="fragment">Since this is for staging, you don't need everything committed</li>
                     <li class="fragment">Production would be different</li>
@@ -420,7 +420,7 @@ xargs rm -r </code></pre>
             <pre><code contenteditable>git push origin stage</code></pre>
             <ul>
                 <li class="fragment">Push to centralized server</li>
-                <li class="fragment">Now all that is required from stage is a simpl
+                <li class="fragment">Now all that is required from stage is a simple
 <pre><code contenteditable>git pull</code></pre></li>
                 <li class="fragment">We can immediately tell if something is wrong on stage with git status
 <pre><code contenteditable>git status</code></pre></li>
@@ -436,7 +436,7 @@ xargs rm -r </code></pre>
             <ul>
                 <li class="fragment">Almost done, but we don't want to leave the user hanging in stage</li>
                 <li class="fragment">For production we know we will only build from master, but what about stage?</li>
-                <li class="fragment">We don't know so we go back to the previous checked out branch
+                <li class="fragment">We don't know, so we go back to the previous checked out branch
 <pre><code contenteditable>
 // checkout the nth previously checkout out branch
 git checkout @{-n}
